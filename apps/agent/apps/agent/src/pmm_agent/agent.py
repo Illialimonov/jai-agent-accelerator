@@ -109,3 +109,4 @@ def create_launch_coordinator():
 
 
 # Convenience exports
+agent = create_pmm_agent()

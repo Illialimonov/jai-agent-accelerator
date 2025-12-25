@@ -6,8 +6,8 @@ before diving into positioning and messaging work.
 """
 
 from langchain_core.tools import tool
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, Field
+from typing import Optional
 
 
 class ProductAnalysis(BaseModel):
@@ -16,10 +16,10 @@ class ProductAnalysis(BaseModel):
     category: str
     target_audience: str
     core_problem: str
-    key_features: List[str]
-    differentiators: List[str]
-    proof_points: List[str]
-    unknowns: List[str]
+    key_features: list[str]
+    differentiators: list[str]
+    proof_points: list[str]
+    unknowns: list[str]
 
 
 @tool
@@ -29,14 +29,17 @@ def analyze_product(
 ) -> str:
     """
     Analyze a product to extract structured information for positioning work.
+
+    Use this tool when starting any PMM project to structure the inputs
+    and identify gaps in the available information.
+
+    Args:
+        product_description: Description of the product, features, and context
+        existing_materials: Any existing positioning, messaging, or marketing materials
+
+    Returns:
+        Structured analysis of the product with identified gaps
     """
-
-    # ✅ PRECOMPUTE — no nested f-strings
-    if existing_materials:
-        materials_summary = f"Reviewed: {existing_materials[:200]}..."
-    else:
-        materials_summary = "No existing materials provided - starting fresh."
-
     analysis = f"""
 ## Product Analysis
 
@@ -64,7 +67,7 @@ def analyze_product(
 3. Use `search_competitors` to understand competitive context
 
 ### Existing Materials Analysis
-{materials_summary}
+{f"Reviewed: {existing_materials[:200]}..." if existing_materials else "No existing materials provided - starting fresh."}
 """
     return analysis
 
@@ -77,14 +80,18 @@ def extract_value_props(
 ) -> str:
     """
     Extract value propositions by translating features into customer benefits.
+
+    Use this tool to convert a list of product features into compelling
+    value propositions that resonate with the target audience.
+
+    Args:
+        features: List of product features to analyze
+        target_audience: Who the product is for
+        competitive_context: How competitors position similar features
+
+    Returns:
+        Feature-to-benefit mapping with value propositions
     """
-
-    competitive_section = (
-        competitive_context
-        if competitive_context
-        else "No competitive context provided. Recommend using `search_competitors`."
-    )
-
     return f"""
 ## Value Proposition Extraction
 
@@ -94,7 +101,7 @@ def extract_value_props(
 ### Feature to Benefit Mapping
 
 | Feature | Benefit (So What?) | Value Prop | Proof Point Needed |
-|--------|--------------------|------------|-------------------|
+|---------|-------------------|------------|-------------------|
 | [Feature 1] | [Outcome for customer] | [Compelling statement] | [Evidence required] |
 | [Feature 2] | [Outcome for customer] | [Compelling statement] | [Evidence required] |
 | [Feature 3] | [Outcome for customer] | [Compelling statement] | [Evidence required] |
@@ -105,7 +112,7 @@ def extract_value_props(
 - **Social Value**: What does it signal? (innovation, professionalism, leadership)
 
 ### Competitive Differentiation
-{competitive_section}
+{competitive_context if competitive_context else "No competitive context provided. Recommend using `search_competitors` to understand differentiation opportunities."}
 
 ### Strongest Value Props (Ranked)
 1. [Highest impact, most differentiated]
@@ -127,20 +134,18 @@ def identify_icp(
 ) -> str:
     """
     Define the Ideal Customer Profile (ICP) for positioning work.
+
+    Use this tool to create a precise definition of who the product
+    is for (and who it's NOT for).
+
+    Args:
+        product_description: What the product does
+        current_customers: Description of existing customers if any
+        excluded_segments: Segments to explicitly exclude
+
+    Returns:
+        Structured ICP definition with targeting criteria
     """
-
-    anti_icp = (
-        excluded_segments
-        if excluded_segments
-        else "- Companies too small to need this\n- Teams without the pain point\n- Orgs with conflicting technology"
-    )
-
-    customer_signals = (
-        current_customers
-        if current_customers
-        else "No current customer data provided. Consider customer interviews or survey data."
-    )
-
     return f"""
 ## Ideal Customer Profile (ICP) Definition
 
@@ -166,10 +171,10 @@ def identify_icp(
 - [Change in circumstances]
 
 ### Anti-ICP (Who We're NOT For)
-{anti_icp}
+{excluded_segments if excluded_segments else "- Companies too small to need this\n- Teams without the pain point\n- Orgs with conflicting technology"}
 
 ### Current Customer Signals
-{customer_signals}
+{current_customers if current_customers else "No current customer data provided. Consider customer interviews or survey data."}
 
 ### Validation Questions
 1. Would they self-identify with this description?
